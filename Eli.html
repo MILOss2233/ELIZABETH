@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Eli</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+}
+canvas { display:block; }
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const TEXT = "I love you";
+const TOTAL = 260;
+
+const DURATION = 16000; // 🔥 16 segundos exactos
+let start = null;
+
+let stage = 0;
+
+const letters = [];
+
+// ❤️ corazón
+function heartX(t) {
+  return 16 * Math.pow(Math.sin(t), 3);
+}
+function heartY(t) {
+  return 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+}
+
+// 🌍 inicio
+for (let i = 0; i < TOTAL; i++) {
+  letters.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    tx: 0,
+    ty: 0,
+    t: (i / TOTAL) * Math.PI * 2,
+    seed: Math.random() * 1000
+  });
+}
+
+function setHeart() {
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  for (let i = 0; i < TOTAL; i++) {
+    let t = letters[i].t;
+    letters[i].tx = cx + heartX(t) * 24;
+    letters[i].ty = cy - heartY(t) * 24;
+  }
+}
+
+function draw(ts) {
+  if (!start) start = ts;
+
+  let time = ts - start;
+
+  // 🔥 STAGES POR TIEMPO (16s total)
+  if (time < 6000) stage = 0;
+  else if (time < 10000) stage = 1;
+  else if (time < 13000) stage = 2;
+  else stage = 3;
+
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.font = "20px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "red";
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  for (let p of letters) {
+
+    // -------------------------
+    // 0: pantalla completa viva
+    // -------------------------
+    if (stage === 0) {
+      p.x += Math.sin(ts * 0.002 + p.seed) * 0.3;
+      p.y += Math.cos(ts * 0.002 + p.seed) * 0.3;
+    }
+
+    // -------------------------
+    // 1: acumulación centro
+    // -------------------------
+    else if (stage === 1) {
+      p.x += (cx - p.x) * 0.02;
+      p.y += (cy - p.y) * 0.02;
+
+      p.y += Math.sin(ts * 0.003 + p.seed) * 0.25;
+      if (Math.random() < 0.002) p.y -= 12;
+    }
+
+    // -------------------------
+    // 2: explosión suave al corazón
+    // -------------------------
+    else if (stage === 2) {
+      p.x += (p.tx - p.x) * 0.06;
+      p.y += (p.ty - p.y) * 0.06;
+    }
+
+    // -------------------------
+    // 3: flujo en el corazón
+    // -------------------------
+    else {
+      p.t += 0.0028;
+
+      p.x = cx + heartX(p.t) * 24 + 0.5;
+      p.y = cy - heartY(p.t) * 24;
+    }
+
+    ctx.fillText(TEXT, p.x, p.y);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+setHeart();
+requestAnimationFrame(draw);
+
+// 🎵 AUTO AUDIO (sin reproductor visible)
+window.addEventListener("click", () => {
+  const audio = new Audio("musica/love.mp3");
+  audio.play();
+});
+</script>
+
+</body>
+</html>
